@@ -15,7 +15,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Search, Wifi, WifiOff, CheckCircle, AlertCircle, User, Phone, MapPin, Calendar } from 'lucide-react';
+import { Search, Wifi, WifiOff, CheckCircle, AlertCircle, User, Phone, MapPin, Calendar, Camera, Scan } from 'lucide-react';
+import { CameraCapture } from '@/lib/components/CameraCapture';
 
 interface Pass {
   passId: string;
@@ -63,6 +64,9 @@ export default function ScanPassPage() {
   });
   
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [showCamera, setShowCamera] = useState(false);
+  const [processingImage, setProcessingImage] = useState(false);
+  const [extractionResult, setExtractionResult] = useState<{name: string | null, phone: string | null} | null>(null);
   
   useEffect(() => {
     fetchPassDetails();
@@ -199,6 +203,70 @@ export default function ScanPassPage() {
 
   const handlePassSelect = (selectedPassId: string) => {
     router.push(`/scan/${selectedPassId}`);
+  };
+
+  const handleCameraCapture = async (imageData: string) => {
+    setProcessingImage(true);
+    setExtractionResult(null);
+    
+    try {
+      const response = await fetch('/api/vision/extract', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ image: imageData }),
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setExtractionResult(result.data);
+        
+        // Auto-fill the form with extracted data
+        setFormData(prev => ({
+          ...prev,
+          name: result.data.name || prev.name,
+          mobile: result.data.phone || prev.mobile,
+        }));
+
+        const extractedItems = [];
+        if (result.data.name) extractedItems.push(`Name: ${result.data.name}`);
+        if (result.data.phone) extractedItems.push(`Phone: ${result.data.phone}`);
+        
+        setStatusMessage(
+          extractedItems.length > 0 
+            ? `✅ AI Extracted: ${extractedItems.join(', ')}` 
+            : '⚠️ No name or phone number found in the image'
+        );
+        
+        setTimeout(() => setStatusMessage(null), 5000);
+      } else {
+        setError('Failed to extract information from image');
+        setTimeout(() => setError(null), 3000);
+      }
+    } catch (error) {
+      console.error('Error processing image:', error);
+      // Suppress extension errors - they don't affect functionality
+      if (error instanceof Error && error.message.includes('control')) {
+        console.log('Browser extension error - ignoring');
+      } else {
+        setError('Failed to process image');
+        setTimeout(() => setError(null), 3000);
+      }
+    } finally {
+      setProcessingImage(false);
+      setShowCamera(false);
+    }
+  };
+
+  const openCamera = () => {
+    setShowCamera(true);
+  };
+
+  const closeCamera = () => {
+    setShowCamera(false);
+    setProcessingImage(false);
   };
   
   const handleMarkAsUsed = async () => {
@@ -610,13 +678,28 @@ export default function ScanPassPage() {
           {/* Visitor Form */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                {pass?.name ? 'Update Your Information' : 'Enter Your Information'}
-              </CardTitle>
-              <CardDescription>
-                Fill in your details to complete the visitor registration
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5" />
+                    {pass?.name ? 'Update Your Information' : 'Enter Your Information'}
+                  </CardTitle>
+                  <CardDescription>
+                    Fill in your details to complete the visitor registration
+                  </CardDescription>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={openCamera}
+                  className="gap-2"
+                  disabled={processingImage}
+                >
+                  <Scan className="h-4 w-4" />
+                  {processingImage ? 'Processing...' : 'Scan Document'}
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -845,6 +928,15 @@ export default function ScanPassPage() {
           
         </div>
       </main>
+
+      {/* Camera Component */}
+      {showCamera && (
+        <CameraCapture
+          onCapture={handleCameraCapture}
+          onClose={closeCamera}
+          isProcessing={processingImage}
+        />
+      )}
     </div>
   );
 }
