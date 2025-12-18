@@ -1,0 +1,6 @@
+Manual Visitors Data Insertion Log
+==================================================
+[2025-12-07T12:01:32.096Z] Parsed 389 visitors from data file
+[2025-12-07T12:01:32.096Z] Fetching unused passes from API...
+[2025-12-07T12:01:32.281Z] Error fetching unused passes: API returned 401: Unauthorized
+[2025-12-07T12:01:32.281Z] Fatal error: API returned 401: Unauthorized

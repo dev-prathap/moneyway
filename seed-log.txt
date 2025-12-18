@@ -1,0 +1,2 @@
+Loaded 389 customers from file
+Connected to MongoDB

@@ -31,7 +31,8 @@ import {
   User,
   LogOut,
   Settings,
-  Bell
+  Bell,
+  Users
 } from 'lucide-react';
 
 interface DashboardClientProps {
@@ -343,7 +344,7 @@ export default function DashboardClient({ user, stats }: DashboardClientProps) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <Button
                   onClick={() => router.push('/search')}
                   variant="outline"
@@ -352,20 +353,33 @@ export default function DashboardClient({ user, stats }: DashboardClientProps) {
                 >
                   <Search className="h-5 w-5" />
                   <div className="text-left">
-                    <div className="font-semibold">Search Passes</div>
-                    <div className="text-sm opacity-80">Find and manage passes</div>
+                    <div className="font-medium">Search Passes</div>
+                    <div className="text-sm text-muted-foreground">Find existing passes</div>
                   </div>
                 </Button>
 
                 <Button
-                  onClick={() => router.push('/generate-cards')}
+                  onClick={() => router.push('/generate')}
                   className="h-20 gap-3"
                   size="lg"
                 >
-                  <FileText className="h-5 w-5" />
+                  <Plus className="h-5 w-5" />
                   <div className="text-left">
-                    <div className="font-semibold">Generate Cards</div>
-                    <div className="text-sm opacity-80">Generate visitor cards</div>
+                    <div className="font-medium">Generate Pass</div>
+                    <div className="text-sm text-muted-foreground">Create new passes</div>
+                  </div>
+                </Button>
+
+                <Button
+                  onClick={() => router.push('/visitors')}
+                  variant="outline"
+                  className="h-20 gap-3"
+                  size="lg"
+                >
+                  <Users className="h-5 w-5" />
+                  <div className="text-left">
+                    <div className="font-medium">View Visitors</div>
+                    <div className="text-sm text-muted-foreground">Database with names</div>
                   </div>
                 </Button>
               </div>
